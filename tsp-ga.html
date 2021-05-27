@@ -1,0 +1,408 @@
+<html>
+<head>
+	<title>Traveling Salesman Problem - Genetic Algorithm (tsp-ga)</title>
+</head>
+<style>
+.main_canvas{
+  max-height:100%;
+  border:1px solid 
+}
+span {
+	display:block;
+}
+</style>
+<body>
+	<div 
+	style="
+		float:right;
+		border:1px dashed; 
+		width:50%;
+		padding:10px;
+		font-size:24px;
+		" id="out"></div>
+
+	<div 
+	style="
+		float:right;
+		border:1px dashed; 
+		width:150px;
+		" id="best">&nbsp;</div>
+</body>
+<script>
+canvas = function(w,h,className){	
+    var canvas_element = document.createElement('canvas');
+    canvas_element.width=w;
+    canvas_element.height=h;
+    canvas_element.className=className;
+    return canvas_element;
+}
+
+//add some different output?
+
+out = document.getElementById('out');
+
+message = function(msg, color){
+	m = span(color);
+	m.innerHTML = msg;
+	out.appendChild(m);
+}
+
+span = function (color){
+	sp = document.createElement('span');
+	sp.style.color=color;
+	return sp;
+}
+
+hr = function(){
+	out.appendChild(document.createElement('hr'));
+}
+
+best = function(n){
+	document.getElementById('best').innerHTML += n;
+}
+
+best_br = function(){
+	document.getElementById('best').appendChild(document.createElement('br'));
+}
+
+num_cities = 7;
+
+num_paths = 7;
+
+best_ever = 0;
+
+best_ever_route = '';
+
+labels = 'abcdefghijklmnop';
+
+colors = ['red', 'green', 'purple', 'orange', 'blue', 'darkgrey', 'grey'];
+
+w = h = 400;
+padding=20;
+c = canvas(w,h,'main_canvas');
+g = c.getContext('2d');
+
+g.strokeStyle='black';
+
+g.font = "20pt sans-serif";
+
+document.body.appendChild(c);
+
+cities = [];
+
+city = function(x,y,i){
+ g.fillStyle="green";
+ g.fillRect(x,y,10,10);
+ g.fillText(labels[i],x-10,y);
+ cities.push({x:x,y:y,i:i})
+}
+
+makeCities = function(x){
+  
+  for(var i=0;i<x;i++){
+    
+    city_x = (Math.random()*(w-padding));
+    city_y = (Math.random()*(w-padding));
+    
+    city(city_x, city_y, i); 
+  }
+}
+
+
+makeCities(num_cities);
+
+drawRoads = function(){
+	oldStroke = g.strokeStyle;
+  for(i in cities){
+	g.strokeStyle='black';
+    g.beginPath();
+    g.moveTo(cities[i].x+2, cities[i].y+2);
+    
+    for(j in cities){
+        g.lineTo(cities[j].x+2, cities[j].y+2);       
+         
+        g.stroke();       g.closePath(); 
+        //g.moveTo(cities[i].x+2, cities[i].y+2);
+    }
+  }
+   
+  g.closePath(); 
+  g.strokeStyle = oldStroke;
+}
+
+drawRoads();
+
+drawCost = function(){
+  
+}
+
+
+
+make_path = function(route,xover=0){
+	return {"route":route,"cost":0,"xover":xover};
+}
+
+randomPath = function(){
+  var random_path = '';
+  //path = '';
+  
+  var path = '';
+
+  for(var i in cities){
+	  if(i==0) continue; //skip 'a' city,  that's your hometown      
+      path += ''+ labels.charAt(cities[i].i);
+  }		
+  
+  for(var l=1;l<cities.length;l++){
+    rand = Math.floor(Math.random()*path.length);
+    random_one = path[rand];
+    random_path += random_one;
+    path = path.replace(path[rand],'');        
+  }
+  
+  //add first city to start and end of path
+  random_path = 'a'+random_path+'a';  
+  
+  return make_path(random_path);
+}
+
+//draw path
+how_many = 1;
+
+drawPath = function(path, color, lineWidth){
+	
+  oldStroke=g.strokeStyle;
+  how_many = how_many + 4;
+	if(lineWidth){ 
+		g.setLineDash([4, 8	])
+		g.lineWidth = '4';
+	 } else {
+		g.setLineDash([0,1])
+		g.lineWidth=lineWidth;
+	 }
+
+	
+  //g.strokeStyle = '4px dashed';
+  first=1;
+  total_dist = 0;
+  for(l in path.route){
+   
+    //build path
+    if(first){
+       last_l = l;
+       first = 0;
+       continue;
+    } else {
+       
+      //console.log('draw ' + path.route[last_l] + ' to ' + path.route[l]);
+      
+      last_city_index = labels.indexOf(path.route[last_l]);
+      this_city_index = labels.indexOf(path.route[l]);
+      
+      g.strokeStyle=color;
+      g.beginPath(); 
+      g.moveTo(cities[last_city_index].x,cities[last_city_index].y );  
+      g.lineTo(cities[this_city_index].x,cities[this_city_index].y );    
+      g.closePath();
+      g.stroke(); 
+      
+      //calculate length 
+      x_dist = cities[last_city_index].x - cities[this_city_index].x;
+      y_dist = cities[last_city_index].y - cities[this_city_index].y;
+      
+      //console.log('x_dist = '+ x_dist);
+      //console.log('y_dist = '+ y_dist);
+      
+      dist = Math.floor(Math.sqrt((x_dist*x_dist) + (y_dist*y_dist)));
+      //console.log('dist = ' + dist);
+      
+      total_dist += dist;
+            
+      last_l = l;
+    }
+          
+  } 
+
+  g.strokeStyle=oldStroke;
+  //console.log('total dist = ' + total_dist);  
+  
+  return total_dist;
+  
+}
+
+
+//rpath = randomPath();
+//console.log(rpath);
+//drawPath(rpath);
+
+//ga part:
+
+/*
+ *  1) create N random paths
+ *  2) draw the paths and store their costs
+ *  3) sort the paths by cost and keep the lowest 2
+ *  4) apply the cross-over operation
+ */ 
+
+
+
+seed_paths = [];
+
+path_costs = [];
+
+while (seed_paths.length<num_paths){	
+	new_path = randomPath();
+	if(-1 == seed_paths.indexOf(new_path)) { //must be unique
+		seed_paths.push(new_path);
+	}
+}
+
+for (path in seed_paths){
+	console.log(path);
+	seed_paths[path].cost = drawPath(seed_paths[path], colors[path]);
+	//path_costs[seed_paths[path] ] = drawPath(seed_paths[path]);
+	//path_costs.push(path_cost);
+}
+
+console.log(seed_paths);
+
+//sort them
+console.log('sort');
+
+sort_paths = function(a,b){
+	for (x in a){	
+		console.log(a[x]);
+	}
+	if (a < b) {
+    return -1;
+  }
+  if (a > b) {
+    return 1;
+  }
+  return 0;
+}
+
+function comparePaths(a, b) {
+  return a.cost - b.cost;
+}
+
+seed_paths.sort(comparePaths);
+
+winners = [seed_paths[0], seed_paths[1]];
+
+best_ever = seed_paths[0].cost;
+
+best_ever_route = seed_paths[0];
+
+best('best = ' + seed_paths[0].cost);
+best_br();
+best(' found in gen: 0');
+best_br();
+best_br();
+
+console.log('winners = ');
+console.log(winners);
+
+//crossover 
+
+crossover = function (path_a, path_b){
+	
+	path_a = path_a.replace(new RegExp('a', 'g'),''); //remove starting point
+	path_b = path_b.replace(new RegExp('a', 'g'),'');	
+	
+	//console.log('old_path_a = ' + path_a);	
+	//console.log('old_path_b = ' + path_b);
+	
+	
+	//split path_a and path_b at boundary
+	boundary = Math.floor(path_a.length/2);
+	path_a_first_part = path_a.slice(0,boundary);
+	path_a_second_part = path_a.slice(boundary);
+	
+	//console.log('path_a_first_part = ' + path_a_first_part);
+	//console.log('path_a_second_part = ' + path_a_second_part);
+	
+	path_b_first_part = path_b.slice(0,boundary);
+	path_b_second_part = path_b.slice(boundary);
+	
+	//console.log('path_b_first_part = ' + path_b_first_part);
+	//console.log('path_b_second_part = ' + path_b_second_part);
+	
+	//add path b's second part to path a and vice-versa
+	
+	new_path_a = path_a;
+	
+	for (x in path_b_second_part){
+		new_path_a = new_path_a.replace(new RegExp(path_b_second_part[x], 'g'),'');
+	}
+	
+	new_path_a += path_b_second_part;
+	
+	new_path_b = path_b;
+	
+	for (x in path_a_second_part){
+		new_path_b = new_path_b.replace(new RegExp(path_a_second_part[x], 'g'),'');
+	}
+	
+	new_path_b += path_a_second_part;
+	
+	//console.log('new_path_a = ' + new_path_a);	
+	//console.log('new_path_b = ' + new_path_b);
+	
+	new_path_a = 'a' + new_path_a + 'a'; //add back starting city
+	new_path_b = 'a' + new_path_b + 'a';
+	
+	return [make_path(new_path_a,1), make_path(new_path_b,1)];
+}
+
+generations = 1000;
+
+next_gen = crossover(seed_paths[0].route, seed_paths[1].route);
+
+for(z=0;z<generations;z++){
+	
+	hr();
+	message('gen: ' + z);
+	//randomPath();
+
+	//add two random paths to the mix
+	while(next_gen.length < num_paths){
+		next_gen.push(randomPath());
+	}
+	
+	//console.log(next_gen);
+	
+	for (path in next_gen){
+		//console.log(path);
+		next_gen[path].cost = drawPath(next_gen[path], colors[path]);
+		//path_costs[seed_paths[path] ] = drawPath(seed_paths[path]);
+		//path_costs.push(path_cost);
+	}
+	
+	next_gen.sort(comparePaths);
+	for (var x in next_gen){
+		message(next_gen[x].route + ' = ' + next_gen[x].cost + ', crossover = ' + next_gen[x].xover, colors[x]);
+	}
+	
+	if(next_gen[0].cost < best_ever){
+		best_ever = next_gen[0].cost;
+		best_ever_route = next_gen[0];
+		//best('best = ' + next_gen[0].cost + ' found in gen: ' + (z+1) + ' crossover: ' + next_gen[0].xover);
+		best('best = ' + next_gen[0].cost);
+		best_br();
+		best(' found in gen: ' + (z));
+		best_br();
+		best(' crossover: ' + next_gen[0].xover);
+		best_br();
+		best_br();
+    //best('route = ' + best_ever_route + ' found in gen: ' + (z+1));
+	}
+	
+	next_gen = crossover(next_gen[0].route, next_gen[1].route);	
+	
+}
+	
+//g.fillRect(0,0,400,400);
+drawPath(best_ever_route, 'red', 10);
+</script>
+</html>
