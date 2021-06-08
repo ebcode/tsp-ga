@@ -1,6 +1,8 @@
 <html>
 <head>
 	<title>Traveling Salesman Problem - Genetic Algorithm (tsp-ga)</title>
+	<meta name="author" content="Eli Bird">
+	<meta name="description" content="Learning about genetic algorithms, a side project">	
 </head>
 <style>
 .main_canvas{
@@ -12,8 +14,7 @@ span {
 }
 </style>
 <body>
-	<div 
-	style="
+	<div style="
 		float:right;
 		border:1px dashed; 
 		width:50%;
@@ -36,8 +37,6 @@ canvas = function(w,h,className){
     canvas_element.className=className;
     return canvas_element;
 }
-
-//add some different output?
 
 out = document.getElementById('out');
 
@@ -73,7 +72,7 @@ best_ever = 0;
 
 best_ever_route = '';
 
-labels = 'abcdefghijklmnop';
+labels = 'abcdefghijklmnop'; // up to 16 cities
 
 colors = ['red', 'green', 'purple', 'orange', 'blue', 'darkgrey', 'grey'];
 
@@ -91,10 +90,10 @@ document.body.appendChild(c);
 cities = [];
 
 city = function(x,y,i){
- g.fillStyle="green";
- g.fillRect(x,y,10,10);
- g.fillText(labels[i],x-10,y);
- cities.push({x:x,y:y,i:i})
+	g.fillStyle="green";
+	g.fillRect(x,y,10,10);
+	g.fillText(labels[i],x-10,y);
+	cities.push({x:x,y:y,i:i})
 }
 
 makeCities = function(x){
@@ -113,30 +112,24 @@ makeCities(num_cities);
 
 drawRoads = function(){
 	oldStroke = g.strokeStyle;
-  for(i in cities){
-	g.strokeStyle='black';
-    g.beginPath();
-    g.moveTo(cities[i].x+2, cities[i].y+2);
-    
-    for(j in cities){
-        g.lineTo(cities[j].x+2, cities[j].y+2);       
-         
-        g.stroke();       g.closePath(); 
-        //g.moveTo(cities[i].x+2, cities[i].y+2);
-    }
-  }
-   
-  g.closePath(); 
-  g.strokeStyle = oldStroke;
+	
+	for(i in cities){
+	
+		g.strokeStyle='black';
+		g.beginPath();
+		g.moveTo(cities[i].x+2, cities[i].y+2);
+		
+		for(j in cities){
+			g.lineTo(cities[j].x+2, cities[j].y+2);
+			g.stroke();
+			g.closePath(); 
+		}
+	}
+	g.closePath(); 
+	g.strokeStyle = oldStroke;
 }
 
 drawRoads();
-
-drawCost = function(){
-  
-}
-
-
 
 make_path = function(route,xover=0){
 	return {"route":route,"cost":0,"xover":xover};
@@ -144,20 +137,19 @@ make_path = function(route,xover=0){
 
 randomPath = function(){
   var random_path = '';
-  //path = '';
   
   var path = '';
 
   for(var i in cities){
-	  if(i==0) continue; //skip 'a' city,  that's your hometown      
-      path += ''+ labels.charAt(cities[i].i);
-  }		
+	if(i==0) continue; //skip 'a' city,  that's your hometown
+    path += ''+ labels.charAt(cities[i].i);
+  }
   
   for(var l=1;l<cities.length;l++){
     rand = Math.floor(Math.random()*path.length);
     random_one = path[rand];
     random_path += random_one;
-    path = path.replace(path[rand],'');        
+    path = path.replace(path[rand],'');
   }
   
   //add first city to start and end of path
@@ -181,10 +173,10 @@ drawPath = function(path, color, lineWidth){
 		g.lineWidth=lineWidth;
 	 }
 
-	
   //g.strokeStyle = '4px dashed';
   first=1;
   total_dist = 0;
+  
   for(l in path.route){
    
     //build path
@@ -227,13 +219,7 @@ drawPath = function(path, color, lineWidth){
   //console.log('total dist = ' + total_dist);  
   
   return total_dist;
-  
 }
-
-
-//rpath = randomPath();
-//console.log(rpath);
-//drawPath(rpath);
 
 //ga part:
 
@@ -244,14 +230,14 @@ drawPath = function(path, color, lineWidth){
  *  4) apply the cross-over operation
  */ 
 
-
-
 seed_paths = [];
 
 path_costs = [];
 
-while (seed_paths.length<num_paths){	
+while (seed_paths.length<num_paths){
+	
 	new_path = randomPath();
+	
 	if(-1 == seed_paths.indexOf(new_path)) { //must be unique
 		seed_paths.push(new_path);
 	}
@@ -267,20 +253,7 @@ for (path in seed_paths){
 console.log(seed_paths);
 
 //sort them
-console.log('sort');
-
-sort_paths = function(a,b){
-	for (x in a){	
-		console.log(a[x]);
-	}
-	if (a < b) {
-    return -1;
-  }
-  if (a > b) {
-    return 1;
-  }
-  return 0;
-}
+console.log('sorting');
 
 function comparePaths(a, b) {
   return a.cost - b.cost;
@@ -288,7 +261,7 @@ function comparePaths(a, b) {
 
 seed_paths.sort(comparePaths);
 
-winners = [seed_paths[0], seed_paths[1]];
+winners = [seed_paths[0], seed_paths[1]]; //the first two with the lowest cost after sorting
 
 best_ever = seed_paths[0].cost;
 
@@ -308,12 +281,11 @@ console.log(winners);
 crossover = function (path_a, path_b){
 	
 	path_a = path_a.replace(new RegExp('a', 'g'),''); //remove starting point
-	path_b = path_b.replace(new RegExp('a', 'g'),'');	
+	path_b = path_b.replace(new RegExp('a', 'g'),'');
 	
 	//console.log('old_path_a = ' + path_a);	
 	//console.log('old_path_b = ' + path_b);
-	
-	
+		
 	//split path_a and path_b at boundary
 	boundary = Math.floor(path_a.length/2);
 	path_a_first_part = path_a.slice(0,boundary);
@@ -380,6 +352,7 @@ for(z=0;z<generations;z++){
 	}
 	
 	next_gen.sort(comparePaths);
+	
 	for (var x in next_gen){
 		message(next_gen[x].route + ' = ' + next_gen[x].cost + ', crossover = ' + next_gen[x].xover, colors[x]);
 	}
@@ -401,8 +374,7 @@ for(z=0;z<generations;z++){
 	next_gen = crossover(next_gen[0].route, next_gen[1].route);	
 	
 }
-	
-//g.fillRect(0,0,400,400);
-drawPath(best_ever_route, 'red', 10);
+
+drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
 </script>
 </html>
