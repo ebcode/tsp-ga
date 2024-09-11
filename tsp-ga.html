@@ -1,33 +1,14 @@
+<!DOCTYPE html>
 <html>
 <head>
 	<title>Traveling Salesman Problem - Genetic Algorithm (tsp-ga)</title>
 	<meta name="author" content="Eli Bird">
-	<meta name="description" content="Learning about genetic algorithms, a side project">	
+	<meta name="description" content="Learning about genetic algorithms, a side project">
+    <link rel="stylesheet" type="text/css" href="assets/style.css">
 </head>
-<style>
-.main_canvas{
-  max-height:100%;
-  border:1px solid 
-}
-span {
-	display:block;
-}
-</style>
 <body>
-	<div style="
-		float:right;
-		border:1px dashed; 
-		width:50%;
-		padding:10px;
-		font-size:24px;
-		" id="out"></div>
-
-	<div 
-	style="
-		float:right;
-		border:1px dashed; 
-		width:150px;
-		" id="best">&nbsp;</div>
+	<div class="out" id="out"></div>
+	<div class="best" id="best">&nbsp;</div>
 </body>
 <script>
 canvas = function(w,h,className){	
