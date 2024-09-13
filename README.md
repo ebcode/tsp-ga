@@ -46,7 +46,7 @@ Now Anne and Bert have a baby, Cathy. Cathy gets half of Anne's DNA, and half of
 
 Cathy's DNA looks like this: AAAABBBB
 
-She's got her mother's eyes, and her father's nose! :)
+She's got her mother's eyes, and her father's nose! :^)
 
 ### Fitness Function
 
@@ -61,13 +61,15 @@ To simplify the game, and to make it work with our strings of DNA, we'll take aw
 to move left or right, and there will only be one home square
 at the top of the screen, directly above the frog's starting point. We'll also get rid of the river
 and logs at the top of the screen, so the frog just has to make it across the road. We'll keep the cars,
-so the frog still has to avoid those.
+the frog still has to avoid those. Finally, we'll make it turn-based. That means the cars only
+move after the frog makes a move. For the frog, "stop" is a valid move, or instruction. This way when
+the frog "stops", all the cars will take a turn moving.
 
-So all the frog has to do to get home safely is two things:
+So, with all those adjustments, now all the frog has to do to get home safely is two things:
 It has to "go" at the right time, and "stop" at the right time.
 
 Now we have two distinct actions to match our two distinct letters in the DNA. 
-A for "go", and B for "stop".
+"A" for "go", and "B" for "stop".
 If we feed Anne's DNA to the frog as a set of instructions 
 (maybe not as tasty as flies), we'll turn:
 
@@ -87,8 +89,9 @@ And Cathy's DNA becomes:
 
 1.go 2.go 3.go 4.go 5.stop 6.stop 7.stop 8.stop 
 
-Cathy will move four steps and then stop for four beats. To give Cathy a chance to reach the home square, we'll repeat
-her instructions after the last one. So we have a "goto" as step 9, which jumps back to step 1 and performs it.
+Cathy will move four steps and then stop for four beats. To give Cathy a chance to reach the home square, 
+we'll repeat her instructions after the last one. So we have a "goto" as step 9, 
+which jumps back to step 1 and performs that move.
 
 1.go 2.go 3.go 4.go 5.stop 6.stop 7.stop 8.stop [9.goto 1]
 
