@@ -1,6 +1,6 @@
-num_cities = 8;
+num_cities = 10;
 
-num_paths = 7;
+num_paths = 8;
 
 best_ever = 0;
 
@@ -11,6 +11,8 @@ labels = 'abcdefghijklmnop'; // up to 16 cities
 colors = ['red', 'green', 'purple', 'orange', 'blue', 'darkgrey', 'grey'];
 
 cities = [];
+
+generations = 600;
 
 w = h = 400;
 

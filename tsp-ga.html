@@ -94,7 +94,7 @@ makeCities = function(x){
 resetCities = function(){
     cities = [];
     clearCanvas(g);
-    num_cities = document.getElementById('cities').value;
+    // num_cities = document.getElementById('cities').value;
     makeCities(num_cities);
     drawCities(cities);
 }
@@ -244,7 +244,8 @@ while (seed_paths.length < num_paths){
 }
 
 for (path in seed_paths){	
-	seed_paths[path].cost = drawPath(seed_paths[path], colors[path]);	
+	seed_paths[path].cost = drawPath(seed_paths[path], colors[path]); 
+    //TODO! split up drawing and finding cost as two separate functions
 }
 
 console.log(seed_paths);
@@ -286,7 +287,7 @@ crossover = function (path_a, path_b){
 	//console.log('old_path_b = ' + path_b);
 		
 	//split path_a and path_b at boundary 
-	boundary = Math.floor(path_a.length/2);
+	boundary = Math.floor(path_a.length/2); // 6 and 7 characters, boundary is at 3
 	path_a_first_part = path_a.slice(0,boundary);
 	path_a_second_part = path_a.slice(boundary);
 	
@@ -312,7 +313,8 @@ crossover = function (path_a, path_b){
 	new_path_b = path_b;
 	
 	for (x in path_a_second_part){
-		new_path_b = new_path_b.replace(new RegExp(path_a_second_part[x], 'g'),'');
+		new_path_b = new_path_b.replace(new RegExp(path_a_second_part[x], 'g'),''); 
+        //this needs better explanation -- why this way, instead of copy paste?
 	}
 	
 	new_path_b += path_a_second_part;
@@ -328,11 +330,10 @@ crossover = function (path_a, path_b){
 
 
 // TODO! move all the computation into a worker
-generations = 100;
+
 
 next_gen = crossover(seed_paths[0].route, seed_paths[1].route);
 
-/*
 for(z=0;z<generations;z++){
 	
 	hr();
@@ -341,9 +342,9 @@ for(z=0;z<generations;z++){
 
 	//add two random paths to the mix -- TODO! don't add random paths. modify
     // to use a larger initial population, and use more crossover between paths
-//	while(next_gen.length < num_paths){
-//		next_gen.push(randomPath());
-//	}
+	while(next_gen.length < num_paths){
+		next_gen.push(randomPath(cities, labels));
+	}
 	
 	//console.log(next_gen);	
 	for (path in next_gen){
@@ -372,9 +373,9 @@ for(z=0;z<generations;z++){
 		best_br();
 		best_br();
         
-        clearCanvas();
+        clearCanvas(g);
         
-        drawCities();        
+        drawCities(cities);        
         drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
         
     //best('route = ' + best_ever_route + ' found in gen: ' + (z+1));
@@ -384,8 +385,8 @@ for(z=0;z<generations;z++){
 	next_gen = crossover(next_gen[0].route, next_gen[1].route);	
 	
 }
-*/
 
-//drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
+
+drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
 </script>
 </html>
