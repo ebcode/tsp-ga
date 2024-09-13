@@ -1,0 +1,42 @@
+.main_canvas{
+max-height:100%;
+border:1px solid 
+}
+
+span {
+display:block;
+}
+
+.out {
+float:right;
+border:1px dashed; 
+width:50%;
+padding:10px;
+font-size:24px;
+}
+
+.best {
+float:right;
+border:1px dashed; 
+width:150px;
+}
+
+.canvas {
+clear:both;
+width:400px;
+height:400px;
+border:1px solid;
+}
+
+.leftpanel{
+float:left;
+}
+
+.rightpanel{
+float:right;
+}
+
+.controlpanel{
+border:1px dashed;
+padding:1em;
+}

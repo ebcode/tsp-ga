@@ -5,19 +5,46 @@
 	<meta name="author" content="Eli Bird">
 	<meta name="description" content="Learning about genetic algorithms, a side project">
     <link rel="stylesheet" type="text/css" href="assets/style.css">
+    <script lang="javascript" src="assets/utils.js"></script>
 </head>
 <body>
-	<div class="out" id="out"></div>
-	<div class="best" id="best">&nbsp;</div>
+    <article>
+        <h1>Traveling Salesman Problem - Genetic Algorithm (tsp-ga)</h1>
+        <p>A side project</p>
+    </article>    
+    <div id="leftpanel" class="leftpanel">        
+        <div id="canvas" class="canvas">
+        </div>
+        <div id="controlpanel" class="controlpanel">
+	        <label>Cities: <input type="text" name="cities" id="cities" value="6" size="2"></label>
+            <label>Population: <input type="text" name="pop" id="pop" value="20" size="2"></label>
+            <label>Mutation %: <input type="text" name="mut" id="mut" value="0.05" size="2"></label>
+            <br>
+            <button id="reset">Reset</button>
+            <button id="run">Run</button>
+        </div>
+    </div>
+    <div id="rightpanel">
+        <div class="out" id="out"></div>
+	    <div class="best" id="best">&nbsp;</div>
+    </div>
 </body>
+<script lang="javascript" src="assets/globals.js"></script>
 <script>
-canvas = function(w,h,className){	
-    var canvas_element = document.createElement('canvas');
-    canvas_element.width=w;
-    canvas_element.height=h;
-    canvas_element.className=className;
-    return canvas_element;
-}
+
+const myWorker = new Worker("assets/worker.js");
+
+myWorker.onmessage = (e) => {  
+    console.log("Message received from worker:");
+    console.log(e.data);
+};
+
+myWorker.postMessage('Yo');
+
+document.getElementById('reset').onclick = function(){
+    //clearCanvas();
+    resetCities();
+};
 
 out = document.getElementById('out');
 
@@ -27,14 +54,8 @@ message = function(msg, color){
 	out.appendChild(m);
 }
 
-span = function (color){
-	sp = document.createElement('span');
-	sp.style.color=color;
-	return sp;
-}
-
 hr = function(){
-	out.appendChild(document.createElement('hr'));
+    out.appendChild(document.createElement('hr'));
 }
 
 best = function(n){
@@ -45,57 +66,45 @@ best_br = function(){
 	document.getElementById('best').appendChild(document.createElement('br'));
 }
 
-num_cities = 7;
-
-num_paths = 7;
-
-best_ever = 0;
-
-best_ever_route = '';
-
-labels = 'abcdefghijklmnop'; // up to 16 cities
-
-colors = ['red', 'green', 'purple', 'orange', 'blue', 'darkgrey', 'grey'];
-
-w = h = 400;
-padding=20;
-c = canvas(w,h,'main_canvas');
-g = c.getContext('2d');
-
-g.strokeStyle='black';
-
-g.font = "20pt sans-serif";
-
-document.body.appendChild(c);
-
-cities = [];
+document.getElementById('canvas').appendChild(c);
 
 city = function(x,y,i){
-	g.fillStyle="green";
-	g.fillRect(x,y,10,10);
-	g.fillText(labels[i],x-10,y);
 	cities.push({x:x,y:y,i:i})
 }
 
-makeCities = function(x){
-  
-  for(var i=0;i<x;i++){
-    
+drawCity = function(city){
+    g.fillStyle="green";
+	g.fillRect(city.x,city.y,10,10);
+	g.fillText(labels[city.i],city.x-10,city.y);
+}
+
+drawCities = function(cities){
+    for(var i=0;i<cities.length;i++){
+        drawCity(cities[i]);
+    }
+}
+
+makeCities = function(x){  
+  for(var i=0;i<x;i++){    
     city_x = (Math.random()*(w-padding));
     city_y = (Math.random()*(w-padding));
-    
     city(city_x, city_y, i); 
   }
 }
 
+resetCities = function(){
+    cities = [];
+    clearCanvas(g);
+    num_cities = document.getElementById('cities').value;
+    makeCities(num_cities);
+    drawCities(cities);
+}
 
-makeCities(num_cities);
 
 drawRoads = function(){
 	oldStroke = g.strokeStyle;
 	
-	for(i in cities){
-	
+	for(i in cities){	
 		g.strokeStyle='black';
 		g.beginPath();
 		g.moveTo(cities[i].x+2, cities[i].y+2);
@@ -110,22 +119,31 @@ drawRoads = function(){
 	g.strokeStyle = oldStroke;
 }
 
-drawRoads();
+//drawRoads();
 
-make_path = function(route,xover=0){
-	return {"route":route,"cost":0,"xover":xover};
+makePath = function(route, xover=0){
+  return {"route":route,"cost":0,"xover":xover};
 }
 
-randomPath = function(){
+randomPath = function(cities, labels){
+  
   var random_path = '';
   
   var path = '';
 
+  var rand = 0;
+
+  var random_one = '';
+
   for(var i in cities){
-	if(i==0) continue; //skip 'a' city,  that's your hometown
+	if(i==0) continue; //skip 'a' city. 'a' will always be first and last in a path
     path += ''+ labels.charAt(cities[i].i);
   }
   
+  if(debug){
+    console.log('path = ' + path + ' in randomPath');
+  }
+
   for(var l=1;l<cities.length;l++){
     rand = Math.floor(Math.random()*path.length);
     random_one = path[rand];
@@ -136,7 +154,7 @@ randomPath = function(){
   //add first city to start and end of path
   random_path = 'a'+random_path+'a';  
   
-  return make_path(random_path);
+  return makePath(random_path);
 }
 
 //draw path
@@ -215,20 +233,19 @@ seed_paths = [];
 
 path_costs = [];
 
-while (seed_paths.length<num_paths){
-	
-	new_path = randomPath();
+resetCities();
+
+while (seed_paths.length < num_paths){	
+
+	new_path = randomPath(cities, labels);
 	
 	if(-1 == seed_paths.indexOf(new_path)) { //must be unique
 		seed_paths.push(new_path);
 	}
 }
 
-for (path in seed_paths){
-	console.log(path);
-	seed_paths[path].cost = drawPath(seed_paths[path], colors[path]);
-	//path_costs[seed_paths[path] ] = drawPath(seed_paths[path]);
-	//path_costs.push(path_cost);
+for (path in seed_paths){	
+	seed_paths[path].cost = drawPath(seed_paths[path], colors[path]);	
 }
 
 console.log(seed_paths);
@@ -248,8 +265,10 @@ best_ever = seed_paths[0].cost;
 
 best_ever_route = seed_paths[0];
 
+drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
+
 best('best = ' + seed_paths[0].cost);
-best_br();
+best_br();  
 best(' found in gen: 0');
 best_br();
 best_br();
@@ -267,7 +286,7 @@ crossover = function (path_a, path_b){
 	//console.log('old_path_a = ' + path_a);	
 	//console.log('old_path_b = ' + path_b);
 		
-	//split path_a and path_b at boundary
+	//split path_a and path_b at boundary 
 	boundary = Math.floor(path_a.length/2);
 	path_a_first_part = path_a.slice(0,boundary);
 	path_a_second_part = path_a.slice(boundary);
@@ -287,7 +306,7 @@ crossover = function (path_a, path_b){
 	
 	for (x in path_b_second_part){
 		new_path_a = new_path_a.replace(new RegExp(path_b_second_part[x], 'g'),'');
-	}
+	}   
 	
 	new_path_a += path_b_second_part;
 	
@@ -305,26 +324,29 @@ crossover = function (path_a, path_b){
 	new_path_a = 'a' + new_path_a + 'a'; //add back starting city
 	new_path_b = 'a' + new_path_b + 'a';
 	
-	return [make_path(new_path_a,1), make_path(new_path_b,1)];
+	return [makePath(new_path_a,1), makePath(new_path_b,1)];
 }
 
-generations = 1000;
+
+// TODO! move all the computation into a worker
+generations = 100;
 
 next_gen = crossover(seed_paths[0].route, seed_paths[1].route);
 
+/*
 for(z=0;z<generations;z++){
 	
 	hr();
 	message('gen: ' + z);
 	//randomPath();
 
-	//add two random paths to the mix
-	while(next_gen.length < num_paths){
-		next_gen.push(randomPath());
-	}
+	//add two random paths to the mix -- TODO! don't add random paths. modify
+    // to use a larger initial population, and use more crossover between paths
+//	while(next_gen.length < num_paths){
+//		next_gen.push(randomPath());
+//	}
 	
-	//console.log(next_gen);
-	
+	//console.log(next_gen);	
 	for (path in next_gen){
 		//console.log(path);
 		next_gen[path].cost = drawPath(next_gen[path], colors[path]);
@@ -332,6 +354,7 @@ for(z=0;z<generations;z++){
 		//path_costs.push(path_cost);
 	}
 	
+    //order the paths by best route
 	next_gen.sort(comparePaths);
 	
 	for (var x in next_gen){
@@ -349,13 +372,21 @@ for(z=0;z<generations;z++){
 		best(' crossover: ' + next_gen[0].xover);
 		best_br();
 		best_br();
+        
+        clearCanvas();
+        
+        drawCities();        
+        drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
+        
     //best('route = ' + best_ever_route + ' found in gen: ' + (z+1));
 	}
 	
+    //
 	next_gen = crossover(next_gen[0].route, next_gen[1].route);	
 	
 }
+*/
 
-drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
+//drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
 </script>
 </html>
