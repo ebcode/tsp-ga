@@ -31,14 +31,14 @@
 <script lang="javascript" src="assets/globals.js"></script>
 <script>
 
+/* TBD
 const myWorker = new Worker("assets/worker.js");
-
 myWorker.onmessage = (e) => {  
     console.log("Message received from worker:");
     console.log(e.data);
 };
-
 myWorker.postMessage('Yo');
+*/
 
 document.getElementById('reset').onclick = function(){
     //clearCanvas();
@@ -85,8 +85,8 @@ drawCities = function(cities){
 
 makeCities = function(x){  
   for(var i=0;i<x;i++){    
-    city_x = (Math.random()*(w-padding));
-    city_y = (Math.random()*(w-padding));
+    city_x = (Math.random()*(w-padding)+padding/2);
+    city_y = (Math.random()*(h-padding)+padding/2);
     city(city_x, city_y, i); 
   }
 }
@@ -120,6 +120,7 @@ drawRoads = function(){
 
 //drawRoads();
 
+// paths selected for crossover will have xover set to 1
 makePath = function(route, xover=0){
   return {"route":route,"cost":0,"xover":xover};
 }
@@ -382,11 +383,16 @@ for(z=0;z<generations;z++){
 	}
 	
     //
-	next_gen = crossover(next_gen[0].route, next_gen[1].route);	
+	next_gen = crossover(next_gen[0].route, next_gen[1].route);	 // think about *not* discarding non-best solutions
+                                                                // -- remember the losers
 	
 }
 
+//drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
 
-drawPath(best_ever_route, 'red', 10);  //highlight the best path in red
+/* NOTES and IDEAS:
+ use a webworker to explore optimal sub-routes...
+*/
+
 </script>
 </html>

@@ -16,7 +16,7 @@ generations = 600;
 
 w = h = 400;
 
-padding = 20;
+padding = 40;
 
 c = canvas(w,h,'main_canvas');
 
